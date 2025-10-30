@@ -1,0 +1,156 @@
+.home-container {
+  margin: 32px auto 48px;
+}
+
+.home-header {
+  border-bottom: 2px solid #222;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.home-tab {
+  display: inline-block;
+  border: 2px solid #222;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  padding: 6px 12px;
+  font-weight: 700;
+  background: #fff;
+  transform: translateY(2px);
+}
+
+.home-grid {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  border: 2px solid #222;
+  border-radius: 14px;
+  background: #fff;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 #222;
+}
+
+.card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-thumb {
+  position: relative;
+  height: 220px;
+  margin: 12px;
+  border: 2px solid #222;
+  border-radius: 16px;
+  background: #fafafa;
+  overflow: hidden;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 14px;
+}
+.card-img.placeholder {
+  background: #f2f2f2;
+}
+
+.card-like-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #222;
+  background: #fff;
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #bbb;
+}
+.card-like-btn.on {
+  color: #e11d48;
+}
+
+.card-body {
+  padding: 0 12px 12px;
+}
+.card-brand {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #333;
+}
+.card-name {
+  font-weight: 700;
+  margin: 4px 0 8px;
+}
+
+.card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tag {
+  border: 2px solid #222;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  background: #fff;
+}
+
+.card-rating {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #333;
+}
+.card-rating .review {
+  color: #666;
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.home-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  user-select: none;
+}
+.page-number,
+.page-chevron {
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.page-number.active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+.page-chevron:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-width: 600px) {
+  .card-thumb {
+    height: 180px;
+  }
+}
