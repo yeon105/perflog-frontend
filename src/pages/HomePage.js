@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchPerfumes } from "../api/perfume";
+import "../styles/pages/_shard/common.css";
 import "../styles/pages/HomePage.css";
 
+const PAGE_SIZE = 8;
 const MAX_PAGES = 5;
 
 export default function HomePage() {
   const [list, setList] = useState([]);
   const [meta, setMeta] = useState({
     page: 1,
-    size: 10,
+    size: PAGE_SIZE,
     totalPages: 1,
     hasPrev: false,
     hasNext: false,
@@ -22,15 +24,15 @@ export default function HomePage() {
     name: p.name,
     tags: [p.season, p.gender].filter(Boolean),
     image: p.imageUrl || null,
-    rating: p.averageRating,
-    reviewCount: p.reviewCount,
+    rating: typeof p.averageRating === "number" ? p.averageRating : 0,
+    reviewCount: p.reviewCount ?? 0,
     liked: false,
   });
 
-  const load = useCallback(async (page, size) => {
+  const load = useCallback(async (page) => {
     setLoading(true);
     try {
-      const { data } = await fetchPerfumes(page, size);
+      const { data } = await fetchPerfumes(page, PAGE_SIZE);
       setList(data.items.map(toCardModel));
       setMeta(data.meta);
     } finally {
@@ -39,7 +41,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    load(1, 10);
+    load(1);
   }, [load]);
 
   const toggleLike = (e, id) => {
@@ -75,9 +77,14 @@ export default function HomePage() {
   const goNext = () => meta.hasNext && goPage(meta.page + 1);
 
   return (
-    <section className="container home-container">
-      <div className="home-header">
-        <span className="home-tab active">HOME</span>
+    <section className="container page-shell">
+      <div className="tabs-row">
+        <Link to="/" className="tab active">
+          HOME
+        </Link>
+        <Link to="/search" className="tab">
+          검색
+        </Link>
       </div>
 
       {loading && <p style={{ textAlign: "center" }}>불러오는 중…</p>}
