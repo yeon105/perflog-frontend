@@ -6,3 +6,15 @@ export function fetchPerfumes(page, size) {
     params: { page, size },
   });
 }
+
+// 향수 상세정보 조회
+export function fetchPerfumeDetail(perfumeId) {
+  return http.get(`/perfumes/${perfumeId}`);
+}
+
+// 향수 검색
+export function searchPerfumes({ target, keyword, page, size }) {
+  return http.get("/perfumes/search", {
+    params: { target, keyword, page, size },
+  });
+}
