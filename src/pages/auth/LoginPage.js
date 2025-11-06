@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { loginApi } from "../../api/auth";
+import { loginApi, fetchMe } from "../../api/auth";
+import { useAuth } from "../../context/AuthContext";
 import "../../styles/pages/_shard/auth.css";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { setAuthUser } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -23,10 +25,19 @@ export default function LoginPage() {
         email: form.email,
         password: form.password,
       });
-      toast.success(response.data.message);
+      try {
+        const { data } = await fetchMe();
+        setAuthUser(data);
+        localStorage.setItem("auth:changed", Date.now().toString());
+      } catch {}
+      toast.success(response?.data?.message || "로그인 성공");
       navigate("/", { replace: true });
     } catch (error) {
-      toast.error(error.response.data.error);
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "로그인에 실패했습니다.";
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

@@ -11,6 +11,9 @@ import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import NotFound from "./pages/_shared/NotFound";
 
+import MyPage from "./pages/MyPage";
+import AccountEditPage from "./pages/AccountEditPage";
+
 import { Toaster } from "react-hot-toast";
 
 function App() {
@@ -42,6 +45,8 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/perfumes/:id" element={<PerfumeDetailPage />} />
+          <Route path="/my" element={<MyPage />} />
+          <Route path="/my/account" element={<AccountEditPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
