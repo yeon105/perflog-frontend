@@ -6,6 +6,7 @@ import {
   fetchReviewsByPerfume,
   createReview,
 } from "../api/review";
+import { recordPreference, checkLiked } from "../api/preference";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import "../styles/pages/_shard/common.css";
@@ -14,15 +15,22 @@ import "../styles/pages/PerfumeDetailPage.css";
 export default function PerfumeDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
+
   const [data, setData] = useState(null);
   const [summary, setSummary] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showInput, setShowInput] = useState(false);
+
+  const [showReviewInput, setShowReviewInput] = useState(false);
   const [newRating, setNewRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(null);
   const [newContent, setNewContent] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const [liked, setLiked] = useState(false);
+  const [showPreferenceInput, setShowPreferenceInput] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("LIKE");
+  const [usedAt, setUsedAt] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -48,16 +56,27 @@ export default function PerfumeDetailPage() {
         } catch {
           setReviews([]);
         }
+
+        if (user) {
+          try {
+            const likedRes = await checkLiked(id);
+            setLiked(Boolean(likedRes.data));
+            setSelectedStatus(likedRes.data ? "LIKE" : "DISLIKE");
+          } catch {
+            setLiked(false);
+            setSelectedStatus("LIKE");
+          }
+        }
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [id]);
+  }, [id, user]);
 
-  const handleSubmit = async () => {
+  const handleSubmitReview = async () => {
     if (!newContent) return;
-    setSubmitting(true);
+    setSubmittingReview(true);
     try {
       await createReview({
         perfumeId: id,
@@ -72,25 +91,42 @@ export default function PerfumeDetailPage() {
       setNewContent("");
       setNewRating(5);
       setHoverRating(null);
-      setShowInput(false);
+      setShowReviewInput(false);
     } catch (err) {
-      if (err.response?.status === 409) {
+      if (err.response?.status === 409)
         toast.error("이미 등록된 리뷰가 있습니다.");
-      } else {
-        toast.error("리뷰 등록 실패");
-      }
+      else toast.error("리뷰 등록 실패");
     } finally {
-      setSubmitting(false);
+      setSubmittingReview(false);
     }
   };
 
-  const renderStars = (count) => {
-    return Array.from({ length: 5 }, (_, i) => (
+  const handleSubmitPreference = async () => {
+    if (!usedAt) {
+      toast.error("사용일을 선택해주세요.");
+      return;
+    }
+    const payload = { status: selectedStatus, usedAt };
+    console.log("preference payload", payload);
+    try {
+      await recordPreference(id, payload);
+      setLiked(selectedStatus === "LIKE");
+      toast.success(
+        selectedStatus === "LIKE" ? "선호 등록 완료" : "비선호 등록 완료"
+      );
+      setShowPreferenceInput(false);
+    } catch (err) {
+      if (err.response?.data?.message) toast.error(err.response.data.message);
+      else toast.error("선호 상태 등록 실패");
+    }
+  };
+
+  const renderStars = (count) =>
+    Array.from({ length: 5 }, (_, i) => (
       <span key={i} className={i < count ? "star filled" : "star"}>
         ★
       </span>
     ));
-  };
 
   const renderDistributionStars = (num) => {
     const count = summary.ratingDistribution[num] || 0;
@@ -101,13 +137,12 @@ export default function PerfumeDetailPage() {
     );
   };
 
-  if (loading || !data) {
+  if (loading || !data)
     return (
       <section className="page-shell detail-shell">
         <p className="detail-loading">불러오는 중…</p>
       </section>
     );
-  }
 
   const hasTop = Array.isArray(data.topNotes) && data.topNotes.length > 0;
   const hasMid = Array.isArray(data.middleNotes) && data.middleNotes.length > 0;
@@ -125,11 +160,13 @@ export default function PerfumeDetailPage() {
             )}
           </div>
         </div>
+
         <div className="detail-info">
           <div className="detail-breadcrumb">
             {data.brand} <span className="sep">›</span>
           </div>
           <h1 className="detail-title">{data.name}</h1>
+
           {(hasTop || hasMid || hasBase) && (
             <ul className="detail-meta">
               {hasTop && (
@@ -152,6 +189,7 @@ export default function PerfumeDetailPage() {
               )}
             </ul>
           )}
+
           <div className="detail-tags">
             {data.launchYear && (
               <span className="chip">{data.launchYear}년</span>
@@ -162,6 +200,70 @@ export default function PerfumeDetailPage() {
               <span className="chip">지속력 {data.longevity}</span>
             )}
           </div>
+
+          {user && (
+            <>
+              <button
+                className="review-toggle-btn"
+                onClick={() => setShowPreferenceInput((p) => !p)}
+              >
+                {liked ? "선호/비선호 등록 완료" : "선호/비선호 등록"}
+              </button>
+
+              {showPreferenceInput && (
+                <form
+                  className="preference-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSubmitPreference();
+                  }}
+                >
+                  <div className="status-radio">
+                    <label>
+                      <input
+                        type="radio"
+                        value="LIKE"
+                        checked={selectedStatus === "LIKE"}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                      />
+                      선호
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        value="DISLIKE"
+                        checked={selectedStatus === "DISLIKE"}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                      />
+                      비선호
+                    </label>
+                  </div>
+
+                  <div className="date-picker">
+                    <label>사용일</label>
+                    <input
+                      type="date"
+                      value={usedAt}
+                      onChange={(e) => setUsedAt(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-actions">
+                    <button type="submit">
+                      {selectedStatus === "LIKE" ? "선호 등록" : "비선호 등록"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPreferenceInput(false)}
+                      className="cancel-btn"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -182,16 +284,16 @@ export default function PerfumeDetailPage() {
           </div>
         )}
 
-        {user && !showInput && (
+        {user && !showReviewInput && (
           <button
             className="review-toggle-btn"
-            onClick={() => setShowInput(true)}
+            onClick={() => setShowReviewInput(true)}
           >
             리뷰 작성
           </button>
         )}
 
-        {user && showInput && (
+        {user && showReviewInput && (
           <div className="review-input">
             <div className="star-input">
               {Array.from({ length: 5 }).map((_, i) => {
@@ -217,13 +319,13 @@ export default function PerfumeDetailPage() {
             />
             <div className="review-input-btns">
               <button
-                onClick={handleSubmit}
-                disabled={submitting || !newContent}
+                onClick={handleSubmitReview}
+                disabled={submittingReview || !newContent}
               >
                 등록
               </button>
               <button
-                onClick={() => setShowInput(false)}
+                onClick={() => setShowReviewInput(false)}
                 className="cancel-btn"
               >
                 취소
