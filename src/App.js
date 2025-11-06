@@ -5,6 +5,8 @@ import AuthLayout from "./layouts/AuthLayout";
 import PublicOnly from "./guards/PublicOnly";
 
 import HomePage from "./pages/HomePage";
+import SearchPage from "./pages/SearchPage";
+import PerfumeDetailPage from "./pages/PerfumeDetailPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import NotFound from "./pages/_shared/NotFound";
@@ -38,6 +40,8 @@ function App() {
         {/* 메인 */}
         <Route element={<MainLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/perfumes/:id" element={<PerfumeDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

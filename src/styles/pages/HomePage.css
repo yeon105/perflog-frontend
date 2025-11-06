@@ -1,25 +1,3 @@
-.home-container {
-  margin: 32px auto 48px;
-}
-
-.home-header {
-  border-bottom: 2px solid #222;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-}
-
-.home-tab {
-  display: inline-block;
-  border: 2px solid #222;
-  border-bottom: none;
-  border-radius: 12px 12px 0 0;
-  padding: 6px 12px;
-  font-weight: 700;
-  background: #fff;
-  transform: translateY(2px);
-}
-
 .home-grid {
   list-style: none;
   padding: 0;
@@ -39,7 +17,6 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 0 #222;
 }
-
 .card-link {
   display: block;
   color: inherit;
@@ -55,12 +32,10 @@
   background: #fafafa;
   overflow: hidden;
 }
-
 .card-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: center;
   border-radius: 14px;
 }
 .card-img.placeholder {
@@ -89,6 +64,7 @@
 
 .card-body {
   padding: 0 12px 12px;
+  text-align: center;
 }
 .card-brand {
   margin-top: 6px;
@@ -103,6 +79,7 @@
 .card-tags {
   display: flex;
   gap: 6px;
+  justify-content: center;
   flex-wrap: wrap;
 }
 .tag {
@@ -129,7 +106,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: 20px;
+  margin-top: 16px;
   user-select: none;
 }
 .page-number,
@@ -147,10 +124,4 @@
 .page-chevron:disabled {
   opacity: 0.35;
   cursor: default;
-}
-
-@media (max-width: 600px) {
-  .card-thumb {
-    height: 180px;
-  }
 }
