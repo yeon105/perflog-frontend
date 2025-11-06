@@ -44,16 +44,6 @@ export default function HomePage() {
     load(1);
   }, [load]);
 
-  const toggleLike = (e, id) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setList((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, liked: !item.liked } : item
-      )
-    );
-  };
-
   const getPageList = () => {
     const total = meta.totalPages;
     const current = meta.page;
@@ -78,15 +68,6 @@ export default function HomePage() {
 
   return (
     <section className="container page-shell">
-      <div className="tabs-row">
-        <Link to="/" className="tab active">
-          HOME
-        </Link>
-        <Link to="/search" className="tab">
-          검색
-        </Link>
-      </div>
-
       {loading && <p style={{ textAlign: "center" }}>불러오는 중…</p>}
 
       <ul className="home-grid">
@@ -98,15 +79,6 @@ export default function HomePage() {
               aria-label={`${p.brand} ${p.name}`}
             >
               <div className="card-thumb">
-                <button
-                  type="button"
-                  className={`card-like-btn ${p.liked ? "on" : ""}`}
-                  aria-label={p.liked ? "좋아요 취소" : "좋아요"}
-                  onClick={(e) => toggleLike(e, p.id)}
-                >
-                  {p.liked ? "♥" : "♡"}
-                </button>
-
                 {p.image ? (
                   <img src={p.image} alt={p.name} className="card-img" />
                 ) : (

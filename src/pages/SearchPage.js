@@ -68,14 +68,6 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  const toggleLike = (e, id) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setList((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, liked: !it.liked } : it))
-    );
-  };
-
   const MAX_PAGES = 5;
   const getPageList = () => {
     const total = meta.totalPages;
@@ -113,15 +105,6 @@ export default function SearchPage() {
 
   return (
     <section className="container search-container">
-      <div className="tabs-row">
-        <Link to="/" className="tab active">
-          HOME
-        </Link>
-        <Link to="/search" className="tab">
-          검색
-        </Link>
-      </div>
-
       <div className="search-toolbar">
         <button
           type="button"
@@ -148,13 +131,6 @@ export default function SearchPage() {
           <li key={m.id} className="card">
             <Link to={`/perfumes/${m.id}`} className="card-link">
               <div className="card-thumb">
-                <button
-                  type="button"
-                  className={`card-like-btn ${m.liked ? "on" : ""}`}
-                  onClick={(e) => toggleLike(e, m.id)}
-                >
-                  {m.liked ? "♥" : "♡"}
-                </button>
                 {m.image ? (
                   <img src={m.image} alt={m.name} className="card-img" />
                 ) : (
