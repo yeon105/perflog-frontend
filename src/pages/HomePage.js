@@ -4,7 +4,7 @@ import { fetchPerfumes } from "../api/perfume";
 import "../styles/pages/_shard/common.css";
 import "../styles/pages/HomePage.css";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 const MAX_PAGES = 5;
 
 export default function HomePage() {

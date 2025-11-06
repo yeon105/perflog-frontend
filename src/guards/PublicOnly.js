@@ -1,4 +1,9 @@
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
 export default function PublicOnly({ children }) {
-  // TODO: 쿠키 기반 로그인 확인 후 로그인 상태면 <Navigate to="/" replace /> 처리
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/" replace />;
   return children;
 }

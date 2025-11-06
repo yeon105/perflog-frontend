@@ -1,0 +1,51 @@
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field .label {
+  font-weight: 700;
+  font-size: 14px;
+}
+.field input {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #222;
+  background: #fff;
+  cursor: pointer;
+}
+.btn.ghost {
+  background: #fff;
+  border: 1px solid #ccc;
+}
+.btn.solid {
+  background: #111;
+  color: #fff;
+  border: 1px solid #111;
+}
+.muted {
+  color: #888;
+}
