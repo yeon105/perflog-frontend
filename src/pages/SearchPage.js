@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchPerfumes, searchPerfumes } from "../api/perfume";
+import { fetchPreferredPerfumes } from "../api/preference";
+import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 import "../styles/pages/SearchPage.css";
 
 const PAGE_SIZE = 8;
 
 export default function SearchPage() {
   const [params, setParams] = useSearchParams();
+  const { user } = useAuth();
 
   const [list, setList] = useState([]);
+  const [origList, setOrigList] = useState([]);
   const [meta, setMeta] = useState({
     page: 1,
     size: PAGE_SIZE,
@@ -16,11 +21,13 @@ export default function SearchPage() {
     hasPrev: false,
     hasNext: false,
   });
+  const [origMeta, setOrigMeta] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [target, setTarget] = useState(params.get("target") || "ALL");
   const [keyword, setKeyword] = useState(params.get("keyword") || "");
+  const [sort, setSort] = useState("DEFAULT");
 
   const toCardModel = (p) => ({
     id: p.id,
@@ -30,15 +37,19 @@ export default function SearchPage() {
     image: p.imageUrl || null,
     rating: p.averageRating ?? 0,
     reviewCount: p.reviewCount ?? 0,
-    liked: false,
+    createdAt: p.createdAt || null,
+    liked: !!p.liked,
   });
 
   const loadDefault = async (page, size) => {
     setLoading(true);
     try {
       const { data } = await fetchPerfumes(page, size);
-      setList(data.items.map(toCardModel));
+      const cards = data.items.map(toCardModel);
+      setList(cards);
+      setOrigList(cards);
       setMeta(data.meta);
+      setOrigMeta(data.meta);
     } finally {
       setLoading(false);
     }
@@ -53,8 +64,44 @@ export default function SearchPage() {
         page,
         size,
       });
-      setList(data.items.map(toCardModel));
+      const cards = data.items.map(toCardModel);
+      setList(cards);
+      setOrigList(cards);
       setMeta(data.meta);
+      setOrigMeta(data.meta);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPreferred = async () => {
+    setLoading(true);
+    try {
+      const { data } = await fetchPreferredPerfumes();
+      const cards = data.map((p) => ({
+        id: p.id,
+        brand: p.brand,
+        name: p.name,
+        tags: [p.season, p.gender].filter(Boolean),
+        image: p.imageUrl || null,
+        rating: p.averageRating ?? 0,
+        reviewCount: p.reviewCount ?? 0,
+        createdAt: null,
+        liked: true,
+      }));
+      setList(cards);
+      setOrigList(cards);
+      setMeta({
+        page: 1,
+        size: cards.length,
+        totalPages: 1,
+        hasPrev: false,
+        hasNext: false,
+      });
+    } catch {
+      toast.error("선호목록 불러오기 실패");
+      setSort("DEFAULT");
+      await loadDefault(1, PAGE_SIZE);
     } finally {
       setLoading(false);
     }
@@ -66,7 +113,7 @@ export default function SearchPage() {
     if (kw.trim() === "") loadDefault(1, PAGE_SIZE);
     else loadSearch(1, PAGE_SIZE, tg, kw);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params]);
+  }, [params, user]);
 
   const MAX_PAGES = 5;
   const getPageList = () => {
@@ -87,6 +134,7 @@ export default function SearchPage() {
     if (p < 1 || p > meta.totalPages || p === meta.page) return;
     const kw = params.get("keyword") || "";
     const tg = params.get("target") || "ALL";
+    if (sort === "PREFERRED") return;
     if (kw.trim() === "") loadDefault(p, PAGE_SIZE);
     else loadSearch(p, PAGE_SIZE, tg, kw);
   };
@@ -103,6 +151,38 @@ export default function SearchPage() {
     closeModal();
   };
 
+  const handleSortChange = async (value) => {
+    setSort(value);
+    if (value === "PREFERRED") {
+      if (!user) {
+        toast.error("선호순은 로그인 후에 사용할 수 있습니다.");
+        setSort("DEFAULT");
+        return;
+      }
+      await loadPreferred();
+      return;
+    }
+    if (value === "DEFAULT") {
+      setList(origList);
+      if (origMeta) setMeta(origMeta);
+      return;
+    }
+    const arr = [...origList];
+    if (value === "POPULAR") {
+      arr.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
+    } else if (value === "NEW") {
+      arr.sort((a, b) => {
+        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return db - da;
+      });
+    } else if (value === "RATING") {
+      arr.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+    setList(arr);
+    setMeta((m) => ({ ...m, page: 1 }));
+  };
+
   return (
     <section className="container search-container">
       <div className="search-toolbar">
@@ -117,10 +197,15 @@ export default function SearchPage() {
         <div className="tool-spacer" />
         <select
           className="sort-select"
-          defaultValue="POPULAR"
+          value={sort}
           aria-label="정렬"
+          onChange={(e) => handleSortChange(e.target.value)}
         >
+          <option value="DEFAULT">기본순</option>
           <option value="POPULAR">인기순</option>
+          <option value="NEW">최신순</option>
+          <option value="RATING">평점순</option>
+          <option value="PREFERRED">선호순</option>
         </select>
       </div>
 
@@ -199,7 +284,7 @@ export default function SearchPage() {
                     value="ALL"
                     checked={target === "ALL"}
                     onChange={(e) => setTarget(e.target.value)}
-                  />
+                  />{" "}
                   전체
                 </label>
                 <label className={`seg ${target === "NAME" ? "on" : ""}`}>
@@ -209,7 +294,7 @@ export default function SearchPage() {
                     value="NAME"
                     checked={target === "NAME"}
                     onChange={(e) => setTarget(e.target.value)}
-                  />
+                  />{" "}
                   이름
                 </label>
                 <label className={`seg ${target === "BRAND" ? "on" : ""}`}>
@@ -219,7 +304,7 @@ export default function SearchPage() {
                     value="BRAND"
                     checked={target === "BRAND"}
                     onChange={(e) => setTarget(e.target.value)}
-                  />
+                  />{" "}
                   브랜드
                 </label>
               </div>
