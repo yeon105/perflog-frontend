@@ -170,12 +170,6 @@ export default function SearchPage() {
     const arr = [...origList];
     if (value === "POPULAR") {
       arr.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
-    } else if (value === "NEW") {
-      arr.sort((a, b) => {
-        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return db - da;
-      });
     } else if (value === "RATING") {
       arr.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
@@ -201,9 +195,8 @@ export default function SearchPage() {
           aria-label="정렬"
           onChange={(e) => handleSortChange(e.target.value)}
         >
-          <option value="DEFAULT">기본순</option>
+          <option value="DEFAULT">최신순</option>
           <option value="POPULAR">인기순</option>
-          <option value="NEW">최신순</option>
           <option value="RATING">평점순</option>
           <option value="PREFERRED">선호순</option>
         </select>
