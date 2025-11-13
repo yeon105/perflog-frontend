@@ -11,3 +11,11 @@ export function fetchReviewSummary(perfumeId) {
 export function createReview({ perfumeId, rating, content }) {
   return http.post("/reviews", { perfumeId, rating, content });
 }
+
+export function updateReview(reviewId, { perfumeId, rating, content }) {
+  return http.put(`/reviews/${reviewId}`, { perfumeId, rating, content });
+}
+
+export function deleteReview(reviewId) {
+  return http.delete(`/reviews/${reviewId}`);
+}

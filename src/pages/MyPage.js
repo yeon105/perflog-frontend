@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { fetchMyReviews } from "../api/user";
-import "../styles/pages/MyPage.css";
+import { deleteReview } from "../api/review";
 import toast from "react-hot-toast";
+import "../styles/pages/MyPage.css";
 
 export default function MyPage() {
   const navigate = useNavigate();
@@ -50,6 +51,16 @@ export default function MyPage() {
     load(p);
   };
 
+  const handleDelete = async (reviewId) => {
+    try {
+      await deleteReview(reviewId);
+      toast.success("리뷰가 삭제되었습니다.");
+      load(meta.page);
+    } catch (e) {
+      toast.error("리뷰 삭제 실패");
+    }
+  };
+
   return (
     <section className="container mypage-container">
       <div className="mypage-header">
@@ -83,6 +94,7 @@ export default function MyPage() {
                   <th>날짜</th>
                   <th>별점</th>
                   <th>액션</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -103,6 +115,24 @@ export default function MyPage() {
                         onClick={() => navigate(`/perfumes/${r.perfumeId}`)}
                       >
                         상품으로
+                      </button>
+                    </td>
+                    <td className="review-actions">
+                      <button
+                        className="btn ghost small"
+                        onClick={() =>
+                          navigate(
+                            `/perfumes/${r.perfumeId}?editReviewId=${r.id}`
+                          )
+                        }
+                      >
+                        수정
+                      </button>{" "}
+                      <button
+                        className="btn ghost small danger"
+                        onClick={() => handleDelete(r.id)}
+                      >
+                        삭제
                       </button>
                     </td>
                   </tr>

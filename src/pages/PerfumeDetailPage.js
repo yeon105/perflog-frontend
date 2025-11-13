@@ -5,6 +5,8 @@ import {
   fetchReviewSummary,
   fetchReviewsByPerfume,
   createReview,
+  updateReview,
+  deleteReview,
 } from "../api/review";
 import { recordPreference, checkLiked } from "../api/preference";
 import { useAuth } from "../context/AuthContext";
@@ -22,6 +24,7 @@ export default function PerfumeDetailPage() {
   const [loading, setLoading] = useState(false);
 
   const [showReviewInput, setShowReviewInput] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState(null);
   const [newRating, setNewRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(null);
   const [newContent, setNewContent] = useState("");
@@ -78,12 +81,20 @@ export default function PerfumeDetailPage() {
     if (!newContent) return;
     setSubmittingReview(true);
     try {
-      await createReview({
-        perfumeId: id,
-        rating: newRating,
-        content: newContent,
-      });
-      toast.success("리뷰 등록 완료");
+      if (editingReviewId) {
+        await updateReview(editingReviewId, {
+          content: newContent,
+          rating: newRating,
+        });
+        toast.success("리뷰 수정 완료");
+      } else {
+        await createReview({
+          perfumeId: id,
+          rating: newRating,
+          content: newContent,
+        });
+        toast.success("리뷰 등록 완료");
+      }
       const updatedReviews = await fetchReviewsByPerfume(id);
       const updatedSummary = await fetchReviewSummary(id);
       setReviews(updatedReviews.data);
@@ -92,12 +103,26 @@ export default function PerfumeDetailPage() {
       setNewRating(5);
       setHoverRating(null);
       setShowReviewInput(false);
+      setEditingReviewId(null);
     } catch (err) {
       if (err.response?.status === 409)
         toast.error("이미 등록된 리뷰가 있습니다.");
-      else toast.error("리뷰 등록 실패");
+      else toast.error(editingReviewId ? "리뷰 수정 실패" : "리뷰 등록 실패");
     } finally {
       setSubmittingReview(false);
+    }
+  };
+
+  const handleDelete = async (reviewId) => {
+    try {
+      await deleteReview(reviewId);
+      toast.success("리뷰가 삭제되었습니다.");
+      const updatedReviews = await fetchReviewsByPerfume(id);
+      const updatedSummary = await fetchReviewSummary(id);
+      setReviews(updatedReviews.data);
+      setSummary(updatedSummary.data);
+    } catch (err) {
+      toast.error("리뷰 삭제 실패");
     }
   };
 
@@ -107,7 +132,6 @@ export default function PerfumeDetailPage() {
       return;
     }
     const payload = { status: selectedStatus, usedAt };
-    console.log("preference payload", payload);
     try {
       await recordPreference(id, payload);
       setLiked(selectedStatus === "LIKE");
@@ -284,7 +308,7 @@ export default function PerfumeDetailPage() {
           </div>
         )}
 
-        {user && !showReviewInput && (
+        {user && !showReviewInput && !editingReviewId && (
           <button
             className="review-toggle-btn"
             onClick={() => setShowReviewInput(true)}
@@ -293,7 +317,7 @@ export default function PerfumeDetailPage() {
           </button>
         )}
 
-        {user && showReviewInput && (
+        {(showReviewInput || editingReviewId) && (
           <div className="review-input">
             <div className="star-input">
               {Array.from({ length: 5 }).map((_, i) => {
@@ -322,10 +346,16 @@ export default function PerfumeDetailPage() {
                 onClick={handleSubmitReview}
                 disabled={submittingReview || !newContent}
               >
-                등록
+                {editingReviewId ? "수정" : "등록"}
               </button>
               <button
-                onClick={() => setShowReviewInput(false)}
+                onClick={() => {
+                  setShowReviewInput(false);
+                  setEditingReviewId(null);
+                  setNewContent("");
+                  setNewRating(5);
+                  setHoverRating(null);
+                }}
                 className="cancel-btn"
               >
                 취소
@@ -343,6 +373,27 @@ export default function PerfumeDetailPage() {
               <div className="review-date">
                 {new Date(r.createdAt).toLocaleString()}
               </div>
+              {user && r.email === user.email && (
+                <div className="review-actions">
+                  <button
+                    className="btn ghost small"
+                    onClick={() => {
+                      setEditingReviewId(r.id);
+                      setShowReviewInput(true);
+                      setNewContent(r.content);
+                      setNewRating(r.rating);
+                    }}
+                  >
+                    수정
+                  </button>{" "}
+                  <button
+                    className="btn ghost small danger"
+                    onClick={() => handleDelete(r.id)}
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
